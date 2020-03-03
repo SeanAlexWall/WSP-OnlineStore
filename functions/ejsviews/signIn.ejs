@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <%- include('partials/header.ejs'); %>
+    <title>Sign In</title>
+</head>
+
+<body>
+    <%- include('partials/nav.ejs', {user}); %>
+
+    <% if(error){ %>
+        <p style="color: red"><%= error %></p>
+    <% } %>
+    <form class="form-signin" action="/b/signIn" method="POST">
+        <h3>Sign In</h3>
+        <input type="email" class="form-control" name="email" placeholder="Email Address">
+        <input type="password" class="form-control" name="password" placeholder="Password">
+        <button type="submit" class="btn btn-primary" >Sign In</button>
+    </form>
+
+
+
+
+    <%- include('partials/scripts.ejs') %>
+</body>
+
+</html>
