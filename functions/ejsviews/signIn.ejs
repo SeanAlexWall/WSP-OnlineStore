@@ -13,15 +13,24 @@
 <body>
     <%- include('partials/nav.ejs', {user}); %>
 
-    <% if(error){ %>
-        <p style="color: red"><%= error %></p>
-    <% } %>
+
     <form class="form-signin" action="/b/signIn" method="POST">
         <h3>Sign In</h3>
+        <% if(error){ %>
+            <p style="color: red"><%= error %></p>
+        <% } %>
         <input type="email" class="form-control" name="email" placeholder="Email Address">
         <input type="password" class="form-control" name="password" placeholder="Password">
         <button type="submit" class="btn btn-primary" >Sign In</button>
+
+        <br>
+        <div>
+            No Account?
+            <a href='/b/signup'>Create an Account</a>
+        </div>
     </form>
+
+
 
 
 

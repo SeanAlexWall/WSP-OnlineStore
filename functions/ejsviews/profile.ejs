@@ -14,9 +14,57 @@
     <%- include('partials/nav.ejs', {user}) %>
     <h1>Profile</h1>
 
-    <%= JSON.stringify(user) %>
+    <table class="table table-stripped">
 
+        <tr>
+            <td>Display Name</td>
+            <td><%=user.displayName %></td>
+        </tr>
+        <tr>
+            <td>Email</td>
+            <td><%=user.email %></td>
+        </tr>
+        <tr>
+            <td>PhoneNumber</td>
+            <td><%=user.phoneNumber %></td>
+        </tr>
+        <tr>
+            <td>User ID</td>
+            <td><%=user.uid %></td>
+        </tr>
 
+        <tr>
+            <td>Prfile Image</td>
+            <td><img src="<%=user.photoURL%>" ></td>
+        </tr>
+
+    </table>
+    <a href="/b/orderhistory" class="btn btn-primary">Order History </a>
+
+    <% if(!orders){ %>
+    <% } else { %>
+        <% orders.forEach(order => { %>
+            Order Date: <%= order.timestamp.toDate() %>
+            <table class="table table-stripped">
+                <tr>
+                    <th></th>
+                    <th>Name</th>
+                    <th>Unit Price</th>
+                    <th>Qty</th>
+                </tr>
+                <% for(let i=0; i < order.cart.length; i++) { %>
+                    <td>
+                        <img src="<%=order.cart[i].product.imageurl%>" height="50", width="50">
+                    </td>
+                    <td><%= order.cart[i].product.name %></td>
+                    <td><%= order.cart[i].product.price %></td>
+                    <td><%= order.cart[i].qty %></td>
+                    
+                <% } %>
+            </table>
+        <% }) %>
+    
+    <% } %>
 
 
     <%- include('partials/scripts.ejs') %>

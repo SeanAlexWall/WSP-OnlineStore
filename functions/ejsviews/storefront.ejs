@@ -24,7 +24,10 @@
                 <div class="card-body">
                     <h5 class="card-title"><%= p.data.name %></h5>
                     <p class="card-text">$(<%= p.data.price %>)<br><%= p.data.summary %></p>
-                    <a href="#" class="btn btn-primary">Buy</a>
+                    <form action='/b/add2cart' method="POST">
+                        <input type="hidden" name='docid' value="<%=p.id%>">
+                        <button type="submit" class="btn btn-primary">Add to Cart</button>
+                    </form>
                 </div>
             </div>
         <% } %>
