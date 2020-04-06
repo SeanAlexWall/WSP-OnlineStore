@@ -4,7 +4,7 @@ const app = express();
 
 exports.httpreq = functions.https.onRequest(app);
 
-app.use(express.urlencoded({extended: false}))
+app.use(express.urlencoded({ extended: false }))
 app.use('/public', express.static(__dirname + '/static'));
 
 //set template engine
@@ -14,8 +14,8 @@ app.set('views', './ejsviews');
 
 //frontend +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-function frontendHandler( request, response){
-    response.sendFile( __dirname + '/prodadmin/prodadmin.html');
+function frontendHandler(request, response) {
+    response.sendFile(__dirname + '/prodadmin/prodadmin.html');
 }
 
 app.get('/login', frontendHandler);
@@ -46,9 +46,9 @@ var firebaseConfig = {
     storageBucket: "seanw-wsp20.appspot.com",
     messagingSenderId: "551396521699",
     appId: "1:551396521699:web:a23fa68b15753033f437d6"
-  };
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
+};
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
 
 
 const Constants = require('./myconstants.js');
@@ -56,11 +56,11 @@ const Constants = require('./myconstants.js');
 app.get('/', auth, async (req, res) => {
     const cartCount = req.session.cart ? req.session.cart.length : 0;
     const coll = firebase.firestore().collection(Constants.COLL_PRODUCTS);
-    try{
+    try {
         let products = [];
         const snapshot = await coll.orderBy("name").get();
-        snapshot.forEach(doc =>{
-            products.push({id: doc.id, data: doc.data()});
+        snapshot.forEach(doc => {
+            products.push({ id: doc.id, data: doc.data() });
         });
         res.render("storefront.ejs", {error: false, products, user: req.user, cartCount})
     }catch(e){
@@ -82,7 +82,7 @@ app.get('/b/signIn', auth, (req, res) => {
     res.render('signIn.ejs', {error: false, user: req.user, cartCount : 0});
 })
 
-app.post ('/b/signIn', async (req, res) => {
+app.post('/b/signIn', async (req, res) => {
     const email = req.body.email;
     const password = req.body.password;
     const auth = firebase.auth();
@@ -108,7 +108,7 @@ app.get('/b/signOut', async (req, res) =>{
         req.session.cart = null
         await firebase.auth().signOut();
         res.redirect('/');
-    }catch(e){
+    } catch (e) {
         res.send("Error: sign out: " + JSON.stringify(e))
     }
 })
@@ -162,6 +162,56 @@ app.get("/b/shoppingcart", authAndRedirectSignIn, (req, res)=>{
         cart = ShoppingCart.deserialize(req.session.cart);
     }
     res.render('shoppingcart.ejs', {message: false, cart, user: req.user, cartCount: cart.contents.length});
+});
+app.get('/b/profile', auth, (req, res) => {
+    if (!req.user)
+        res.redirect('/b/signIn');
+    else {
+        res.render('profile', { user: req.user })
+    }
+})
+
+app.get('/b/chatroom', auth, async (req, res) => {
+    if (!req.user)
+        res.redirect('/b/signIn');
+    else {
+        const coll = firebase.firestore().collection(Constants.COLL_MESSAGES);
+        try {
+            let messages = [];
+            const snapshot = await coll.orderBy("time").get();
+            snapshot.forEach(doc => {
+                messages.push({ id: doc.id, data: doc.data() });
+            });
+            res.render("chatroom.ejs", { error: false, messages, user: req.user })
+        } catch (e) {
+            res.render("chatroom.ejs", { error: e, user: req.user });
+        }
+    }
+})
+app.post('/b/chatroom', auth, async (req, res) => {
+    try {
+        const email = req.user.email;
+        const content = req.body.content;
+        const date = new Date();
+        await firebase.firestore().collection(Constants.COLL_MESSAGES).doc().set({ email, content, time: date })
+    }
+    catch (e) {
+        res.send("Error: chatroom: " + e)
+    }
+    const coll = firebase.firestore().collection(Constants.COLL_MESSAGES);
+    try {
+        let messages = [];
+        const snapshot = await coll.orderBy("time").get();
+        snapshot.forEach(doc => {
+            messages.push({ id: doc.id, data: doc.data() });
+        });
+        res.render("chatroom.ejs", { error: false, messages, user: req.user })
+    } catch (e) {
+        res.render("chatroom.ejs", { error: e, user: req.user });
+    }
+    res.render('chatroom.ejs', { user: req.user })
+
+
 })
 
 app.post('/b/checkout', authAndRedirectSignIn, async (req, res)=>{
@@ -247,5 +297,4 @@ function authSysAdmin(req, res, next){
     else{
        return next();
     }
-}
-
+};
