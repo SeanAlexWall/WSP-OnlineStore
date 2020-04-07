@@ -164,52 +164,71 @@ app.get("/b/shoppingcart", authAndRedirectSignIn, (req, res)=>{
     res.render('shoppingcart.ejs', {message: false, cart, user: req.user, cartCount: cart.contents.length});
 });
 app.get('/b/profile', auth, (req, res) => {
+    const cartCount = req.session.cart ? req.session.cart.length : 0;
     if (!req.user)
         res.redirect('/b/signIn');
     else {
-        res.render('profile', { user: req.user })
+        res.render('profile', { user: req.user, cartCount })
+    }
+})
+app.get('/b/chooseChatRoom', async(req, res)=>{
+    const cartCount = req.session.cart ? req.session.cart.length : 0;
+    const coll = firebase.firestore().collection(Constants.COLL_ROOMS);
+    try{
+        let rooms = [];
+        const snapshot = await coll.orderBy("name").get();
+        snapshot.forEach(doc =>{
+            rooms.push({id: doc.id, data: doc.data() });
+        });
+        res.render("chooseChatRoom.ejs", {user: null, error: false, rooms, cartCount})
+    }
+    catch (e){
+        res.render("chooseChatRoom.ejs", {user: null, error: e, cartCount})
     }
 })
 
-app.get('/b/chatroom', auth, async (req, res) => {
+app.get('/b/chatroom', authAndRedirectSignIn, async (req, res) => {
+    const cartCount = req.session.cart ? req.session.cart.length : 0;
     if (!req.user)
         res.redirect('/b/signIn');
     else {
-        const coll = firebase.firestore().collection(Constants.COLL_MESSAGES);
+        let roomId = req.query.roomId;
+        const coll = firebase.firestore().collection(Constants.COLL_ROOMS).doc(roomId).collection(Constants.COLL_MESSAGES);
         try {
             let messages = [];
             const snapshot = await coll.orderBy("time").get();
             snapshot.forEach(doc => {
                 messages.push({ id: doc.id, data: doc.data() });
             });
-            res.render("chatroom.ejs", { error: false, messages, user: req.user })
+            res.render("chatroom.ejs", { error: false, messages, user: req.user, cartCount, roomId })
         } catch (e) {
-            res.render("chatroom.ejs", { error: e, user: req.user });
+            res.render("chatroom.ejs", { error: e, user: req.user, cartCount, roomId });
         }
     }
 })
 app.post('/b/chatroom', auth, async (req, res) => {
+    const cartCount = req.session.cart ? req.session.cart.length : 0;
+    let roomId = req.body.roomId;
     try {
         const email = req.user.email;
         const content = req.body.content;
         const date = new Date();
-        await firebase.firestore().collection(Constants.COLL_MESSAGES).doc().set({ email, content, time: date })
+        await firebase.firestore().collection(Constants.COLL_ROOMS).doc(roomId).collection(Constants.COLL_MESSAGES).doc().set({ email, content, time: date })
     }
     catch (e) {
         res.send("Error: chatroom: " + e)
     }
-    const coll = firebase.firestore().collection(Constants.COLL_MESSAGES);
+    const coll = firebase.firestore().collection(Constants.COLL_ROOMS).doc(roomId).collection(Constants.COLL_MESSAGES);
     try {
         let messages = [];
         const snapshot = await coll.orderBy("time").get();
         snapshot.forEach(doc => {
             messages.push({ id: doc.id, data: doc.data() });
         });
-        res.render("chatroom.ejs", { error: false, messages, user: req.user })
+        res.render("chatroom.ejs", { error: false, messages, user: req.user, cartCount, roomId })
     } catch (e) {
-        res.render("chatroom.ejs", { error: e, user: req.user });
+        res.render("chatroom.ejs", { error: e, user: req.user, cartCount, roomId });
     }
-    res.render('chatroom.ejs', { user: req.user })
 
 
 })
